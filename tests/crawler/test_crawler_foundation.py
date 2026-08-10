@@ -2,13 +2,13 @@ from pathlib import Path
 import sys
 
 
-CRAWLER_ROOT = Path(__file__).resolve().parents[2] / 'crawler'
-if str(CRAWLER_ROOT) not in sys.path:
-    sys.path.insert(0, str(CRAWLER_ROOT))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-from src.core.config import CrawlerConfig
-from src.parsers.html_parser import parse_html
-from src.services.crawler_service import CrawlerService
+from crawler.src.core.config import CrawlerConfig
+from crawler.src.parsers.html_parser import parse_html
+from crawler.src.services.crawler_service import CrawlerService
 
 
 def test_crawler_config_defaults() -> None:
