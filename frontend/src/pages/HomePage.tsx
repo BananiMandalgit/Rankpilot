@@ -1,22 +1,7 @@
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { RecommendationList } from '../components/dashboard/RecommendationList';
 import { SectionTitle } from '../components/dashboard/SectionTitle';
-
-const mockAnalysis = {
-  targetUrl: 'https://example.com',
-  seoScore: 78,
-  aeoScore: 64,
-  issuesFound: 9,
-  status: 'Ready for analysis',
-  overview:
-    'Use this dashboard to stage website analysis results. The current version is a static frontend preview for the next module.',
-  recommendations: [
-    'Improve title tag uniqueness for key pages.',
-    'Add structured FAQ content for high-intent queries.',
-    'Increase internal links from blog posts to service pages.',
-    'Refine heading hierarchy for clearer answer extraction.',
-  ],
-};
+import { mockAnalysis } from '../data/mockAnalysis';
 
 export function HomePage() {
   return (
@@ -85,7 +70,7 @@ export function HomePage() {
               description="Priority actions based on mock SEO/AEO findings."
             />
             <div className="mt-5">
-              <RecommendationList items={mockAnalysis.recommendations} />
+              <RecommendationList items={mockAnalysis.recommendations.map((recommendation) => recommendation.text)} />
             </div>
           </article>
 
