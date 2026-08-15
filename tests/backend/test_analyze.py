@@ -8,9 +8,84 @@ from app.main import app
 client = TestClient(app)
 
 
+class FakeAIClient:
+    def generate(self, prompt: str) -> str:
+        return f"AI recommendation for: {prompt[:20]}"
+
+
 def test_analyze_successful_integration(monkeypatch) -> None:
     def fake_fetch_and_extract(self, url: str) -> PageData:
-        return PageData(url=url, title="Title", meta_description="Desc", h1_count=1, word_count=400)
+        return PageData(
+            url=url,
+            title="Title",
+            meta_description="Desc",
+            h1_count=1,
+            word_count=400,
+            text="Sample page content for AI context.",
+        )
+
+    def fake_analyze(self, page_data: PageData) -> SEOResult:
+        return SEOResult(
+            score=80,
+            title_ok=True,
+            meta_description_ok=True,
+            h1_ok=True,
+            images_alt_ok=True,
+            content_length_ok=False,
+            issues=["Content is too short"],
+        )
+
+    def fake_generate_recommendation(self, issue: str, page_context: str, client) -> str:
+        return f"Fix: {issue}"
+
+    monkeypatch.setattr("app.services.analysis.AnalysisService._get_ai_client", lambda self: FakeAIClient())
+    monkeypatch.setattr("app.services.analysis.AnalysisService._generate_recommendation", fake_generate_recommendation)
+
+    monkeypatch.setattr("crawler.src.services.crawler_service.CrawlerService.fetch_and_extract", fake_fetch_and_extract)
+    monkeypatch.setattr("seo.src.seo_analyzer.SEOAnalyzer.analyze", fake_analyze)
+
+    response = client.post('/api/v1/analyze', json={"url": "https://example.com"})
+
+    assert response.status_code == 200
+    data = response.json()
+    # Pydantic may normalize URLs (trailing slash). Normalize before asserting.
+    assert data['url'].rstrip('/') == 'https://example.com'
+    assert data['seo_score'] == 80
+    assert data['aeo_score'] == 0
+    assert data['issues'] == ["Content is too short"]
+    assert data['recommendations'] == ["Fix: Content is too short"]
+
+
+def test_analyze_no_seo_issues_returns_empty_recommendations(monkeypatch) -> None:
+    def fake_fetch_and_extract(self, url: str) -> PageData:
+        return PageData(url=url, title="Title", meta_description="Desc", h1_count=1, word_count=600, text="Long enough content")
+
+    def fake_analyze(self, page_data: PageData) -> SEOResult:
+        return SEOResult(
+            score=100,
+            title_ok=True,
+            meta_description_ok=True,
+            h1_ok=True,
+            images_alt_ok=True,
+            content_length_ok=True,
+            issues=[],
+        )
+
+    monkeypatch.setattr("crawler.src.services.crawler_service.CrawlerService.fetch_and_extract", fake_fetch_and_extract)
+    monkeypatch.setattr("seo.src.seo_analyzer.SEOAnalyzer.analyze", fake_analyze)
+
+    response = client.post('/api/v1/analyze', json={"url": "https://example.com"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data['seo_score'] == 100
+    assert data['issues'] == []
+    assert data['recommendations'] == []
+
+
+def test_analyze_handles_unconfigured_gemini_client_safely(monkeypatch) -> None:
+    def fake_fetch_and_extract(self, url: str) -> PageData:
+        return PageData(url=url, title="Title", meta_description="Desc", h1_count=1, word_count=400, text="Context")
 
     def fake_analyze(self, page_data: PageData) -> SEOResult:
         return SEOResult(
@@ -25,15 +100,13 @@ def test_analyze_successful_integration(monkeypatch) -> None:
 
     monkeypatch.setattr("crawler.src.services.crawler_service.CrawlerService.fetch_and_extract", fake_fetch_and_extract)
     monkeypatch.setattr("seo.src.seo_analyzer.SEOAnalyzer.analyze", fake_analyze)
+    monkeypatch.setattr("app.services.analysis.AnalysisService._get_ai_client", lambda self: None)
 
     response = client.post('/api/v1/analyze', json={"url": "https://example.com"})
 
     assert response.status_code == 200
     data = response.json()
-    # Pydantic may normalize URLs (trailing slash). Normalize before asserting.
-    assert data['url'].rstrip('/') == 'https://example.com'
     assert data['seo_score'] == 80
-    assert data['aeo_score'] == 0
     assert data['issues'] == ["Content is too short"]
     assert data['recommendations'] == []
 
