@@ -7,6 +7,7 @@ def test_database_connectivity(monkeypatch) -> None:
     from app.core import config as config_module
     from app.core import database as database_module
 
+    config_module.get_settings.cache_clear()
     reload(config_module)
     reload(database_module)
 
