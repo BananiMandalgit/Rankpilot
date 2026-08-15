@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from app.schemas.analyze import AnalyzeResponse
+from app.services.aeo_analyzer import AEOAnalyzer
 from crawler.src.parsers.html_parser import PageData
 from crawler.src.services.crawler_service import CrawlerService
 from seo.src.seo_analyzer import SEOAnalyzer
@@ -86,6 +87,7 @@ class AnalysisService:
             )
 
         seo_result = SEOAnalyzer().analyze(page_data)
+        aeo_result = AEOAnalyzer().analyze(page_data)
         recommendations: list[str] = []
 
         if seo_result.issues:
@@ -105,7 +107,7 @@ class AnalysisService:
         return AnalyzeResponse(
             url=url,
             seo_score=seo_result.score,
-            aeo_score=0,
+            aeo_score=aeo_result.aeo_score,
             issues=seo_result.issues,
             recommendations=recommendations,
         )
