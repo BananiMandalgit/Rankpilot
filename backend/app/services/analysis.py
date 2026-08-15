@@ -2,11 +2,13 @@ from dataclasses import dataclass
 from urllib.parse import urlparse
 
 from app.schemas.analyze import AnalyzeResponse
+from crawler.src.services.crawler_service import CrawlerService
+from seo.src.seo_analyzer import SEOAnalyzer
 
 
 @dataclass(slots=True)
 class AnalysisService:
-    """Orchestrates the analysis flow. Currently returns a controlled placeholder.
+    """Orchestrates URL validation, crawling, and deterministic SEO analysis.
 
     URL validation is conservative here; the request model also validates URLs.
     """
@@ -19,11 +21,32 @@ class AnalysisService:
         if not self._is_valid_url(url):
             raise ValueError("invalid url")
 
-        # Placeholder controlled result until analysis modules are implemented
+        try:
+            page_data = CrawlerService().fetch_and_extract(url)
+        except Exception as exc:
+            return AnalyzeResponse(
+                url=url,
+                seo_score=0,
+                aeo_score=0,
+                issues=[f"Crawler error: {str(exc)}"],
+                recommendations=[],
+            )
+
+        if page_data.error:
+            return AnalyzeResponse(
+                url=url,
+                seo_score=0,
+                aeo_score=0,
+                issues=[page_data.error],
+                recommendations=[],
+            )
+
+        seo_result = SEOAnalyzer().analyze(page_data)
+
         return AnalyzeResponse(
             url=url,
-            seo_score=0,
+            seo_score=seo_result.score,
             aeo_score=0,
-            issues=[],
+            issues=seo_result.issues,
             recommendations=[],
         )
