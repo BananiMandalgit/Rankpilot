@@ -77,11 +77,15 @@ export function HomePage() {
     }
 
     try {
-      new URL(trimmedUrl);
+      const parsedUrl = new URL(trimmedUrl);
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+        throw new Error('Unsupported protocol');
+      }
     } catch {
-      setError('Please enter a valid URL.');
+      setError('Please enter a valid HTTP or HTTPS URL.');
       return;
     }
+
 
     setLoading(true);
     setError(null);
