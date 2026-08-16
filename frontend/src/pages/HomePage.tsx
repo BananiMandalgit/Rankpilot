@@ -1,119 +1,91 @@
-import { useEffect, useState } from 'react';
-import { getBackendHealth } from '../services/backendHealth';
-
-type HealthState = 'loading' | 'connected' | 'unavailable';
-
-const foundationItems = [
-  {
-    title: 'Frontend shell',
-    description: 'React, TypeScript, Tailwind CSS, routing, and API wiring are ready for future screens.',
-  },
-  {
-    title: 'Backend shell',
-    description: 'FastAPI, Pydantic, and SQLAlchemy are structured for a clean service-first API layer.',
-  },
-  {
-    title: 'Crawler shell',
-    description: 'Playwright and BeautifulSoup will be introduced later when crawl logic is actually needed.',
-  },
-  {
-    title: 'AI shell',
-    description: 'Gemini, Groq, and Ollama integrations are reserved for future service-layer work.',
-  },
-];
+import { MetricCard } from '../components/dashboard/MetricCard';
+import { RecommendationList } from '../components/dashboard/RecommendationList';
+import { SectionTitle } from '../components/dashboard/SectionTitle';
+import { mockAnalysis } from '../data/mockAnalysis';
 
 export function HomePage() {
-  const [healthState, setHealthState] = useState<HealthState>('loading');
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const checkBackend = async () => {
-      try {
-        await getBackendHealth();
-
-        if (isMounted) {
-          setHealthState('connected');
-        }
-      } catch {
-        if (isMounted) {
-          setHealthState('unavailable');
-        }
-      }
-    };
-
-    void checkBackend();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const statusLabel =
-    healthState === 'loading'
-      ? 'Checking backend...'
-      : healthState === 'connected'
-        ? 'Backend Connected'
-        : 'Backend Unavailable';
-
-  const statusStyles =
-    healthState === 'connected'
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-      : healthState === 'unavailable'
-        ? 'border-rose-200 bg-rose-50 text-rose-900'
-        : 'border-slate-200 bg-slate-50 text-slate-700';
-
   return (
-    <section className="grid w-full gap-8 py-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-start lg:py-16">
+    <section className="w-full py-10 lg:py-14">
       <div className="space-y-8">
-        <div className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold tracking-[0.24em] text-emerald-900 uppercase">
-          SEO and AEO platform foundation
-        </div>
-
-        <div className="space-y-5">
-          <h1 className="max-w-3xl text-5xl leading-tight font-semibold tracking-tight text-slate-950 sm:text-6xl lg:text-7xl" style={{ fontFamily: 'Georgia, serif' }}>
-            RankPilot is being assembled as a clean, modular base for future optimization workflows.
-          </h1>
-          <p className="max-w-2xl text-lg leading-8 text-slate-600">
-            This page is intentionally minimal. It confirms the frontend stack, routing, and layout structure without introducing any product logic yet.
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-3">
-          {['React + TypeScript', 'FastAPI backend', 'PostgreSQL + Redis'].map((item) => (
-            <div key={item} className="rounded-2xl border border-white/70 bg-white/85 px-5 py-4 shadow-soft backdrop-blur">
-              <div className="text-sm font-medium text-slate-500">Stack</div>
-              <div className="mt-1 text-base font-semibold text-slate-900">{item}</div>
+        <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-soft backdrop-blur sm:p-8">
+          <div className="space-y-5">
+            <div className="inline-flex rounded-full border border-teal-200 bg-teal-50 px-4 py-2 text-xs font-semibold tracking-[0.24em] text-teal-900 uppercase">
+              RankPilot analysis dashboard
             </div>
-          ))}
-        </div>
+            <h1 className="max-w-3xl text-4xl leading-tight font-semibold tracking-tight text-slate-950 sm:text-5xl">
+              Analyze a website for SEO and AEO readiness.
+            </h1>
+            <p className="max-w-2xl text-base leading-7 text-slate-600">{mockAnalysis.overview}</p>
+          </div>
 
-        <div className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold shadow-sm ${statusStyles}`}>
-          {statusLabel}
-        </div>
+          <form className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]" onSubmit={(event) => event.preventDefault()}>
+            <label className="sr-only" htmlFor="website-url">
+              Website URL
+            </label>
+            <input
+              id="website-url"
+              type="url"
+              defaultValue={mockAnalysis.targetUrl}
+              placeholder="https://yourwebsite.com"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+            >
+              Analyze Website
+            </button>
+          </form>
+        </section>
+
+        <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-soft backdrop-blur sm:p-8">
+          <SectionTitle title="Analysis Overview" description="A snapshot of the current mock analysis result for the submitted domain." />
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <MetricCard
+              label="SEO score"
+              value={`${mockAnalysis.seoScore}/100`}
+              helperText="Core on-page SEO checks are mostly healthy with room for metadata refinement."
+              tone="emerald"
+            />
+            <MetricCard
+              label="AEO score"
+              value={`${mockAnalysis.aeoScore}/100`}
+              helperText="Answer-oriented structure needs stronger question-based content coverage."
+              tone="teal"
+            />
+            <MetricCard
+              label="Issues found"
+              value={`${mockAnalysis.issuesFound}`}
+              helperText="These include missing schema opportunities, heading depth, and link flow issues."
+              tone="amber"
+            />
+          </div>
+        </section>
+
+        <section className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
+          <article className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-soft backdrop-blur sm:p-8">
+            <SectionTitle
+              title="Recommendations"
+              description="Priority actions based on mock SEO/AEO findings."
+            />
+            <div className="mt-5">
+              <RecommendationList items={mockAnalysis.recommendations.map((recommendation) => recommendation.text)} />
+            </div>
+          </article>
+
+          <article className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-soft backdrop-blur sm:p-8">
+            <SectionTitle title="Analysis Status" description="Execution state for this initial static dashboard." />
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold tracking-[0.2em] text-slate-500 uppercase">Current status</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{mockAnalysis.status}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Backend integration is intentionally disabled in this module. The UI currently uses static preview data.
+              </p>
+            </div>
+          </article>
+        </section>
       </div>
-
-      <aside className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-soft backdrop-blur">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Current stage</p>
-            <p className="mt-1 text-xl font-semibold text-slate-950">Foundation only</p>
-          </div>
-          <div className="rounded-2xl bg-amber-50 px-4 py-3 text-right">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Status</p>
-            <p className="mt-1 text-sm font-medium text-amber-900">No product features yet</p>
-          </div>
-        </div>
-
-        <div className="mt-6 space-y-4">
-          {foundationItems.map((item) => (
-            <article key={item.title} className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-              <h2 className="text-base font-semibold text-slate-900">{item.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
-            </article>
-          ))}
-        </div>
-      </aside>
     </section>
   );
 }
