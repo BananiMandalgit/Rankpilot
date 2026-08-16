@@ -29,6 +29,6 @@ class CrawlerService:
             return PageData(url=url, error=f"Could not fetch page: {str(e)}")
 
         soup = parse_html(response.text)
-        page_data = extract_seo_data(soup, url)
+        page_data = extract_seo_data(soup, url, raw_html=response.text)
         page_data.status_code = response.status_code
         return page_data
