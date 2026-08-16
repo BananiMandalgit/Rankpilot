@@ -76,4 +76,11 @@ def test_image_and_alt_counts_are_consistent() -> None:
 
     assert result.error == ""
     assert result.images_missing_alt <= result.image_count
-    
+def test_raw_html_is_preserved() -> None:
+    """raw_html should contain the original HTML response, not just extracted text."""
+    service = CrawlerService()
+    result = service.fetch_and_extract("https://example.com")
+
+    assert result.error == ""
+    assert result.raw_html != ""
+    assert "<html" in result.raw_html.lower()

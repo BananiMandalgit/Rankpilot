@@ -14,6 +14,7 @@ class PageData:
     images_missing_alt: int = 0
     text: str = ""
     word_count: int = 0
+    raw_html: str = ""
     status_code: int = 0
     error: str = ""
 
@@ -22,7 +23,7 @@ def parse_html(html: str) -> BeautifulSoup:
     return BeautifulSoup(html, 'html.parser')
 
 
-def extract_seo_data(soup: BeautifulSoup, url: str) -> PageData:
+def extract_seo_data(soup: BeautifulSoup, url: str, raw_html: str = "") -> PageData:
     """Pull title, meta description, H1s, images, and text from parsed HTML,
     and return it as a structured PageData object."""
 
@@ -55,4 +56,5 @@ def extract_seo_data(soup: BeautifulSoup, url: str) -> PageData:
         images_missing_alt=images_missing_alt,
         text=text,
         word_count=word_count,
+        raw_html=raw_html,
     )
